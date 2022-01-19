@@ -98,7 +98,7 @@ void k_filter(const vector<double> &x, const double fs, vector<double> &y) {
 }
 
 
-void calculate_z(vector<double> &signal, double fs, size_t len, const vector<unsigned> &j_range, vector<double> &z) {
+void calculate_z(vector<double> &signal, double fs, size_t len, const vector<unsigned> &j_range, vector<double> &z, double block_size = 0.4) {
     /*========================k_filter========================*/
     vector<double> signal_filtered(len, 0.0);
     k_filter(signal, fs, signal_filtered);
@@ -107,7 +107,7 @@ void calculate_z(vector<double> &signal, double fs, size_t len, const vector<uns
     // WRITE signal_filtered wav
     
     /*========================mean square========================*/
-    double T_g = 0.4;
+    double T_g = block_size;
     double overlap = 0.75, step = 1 - overlap;
     
     //size_t lbound, ubound;
@@ -120,7 +120,7 @@ void calculate_z(vector<double> &signal, double fs, size_t len, const vector<uns
 }
 
 /*===================intergrated_loudness func. Stereo overload====================*/
-double integrated_loudness(Stereo_Wav &wav, double fs) {
+double integrated_loudness(Stereo_Wav &wav, double fs, double block_size = 0.4) {
     /*========================data normalize & copy========================*/
     size_t len = wav.left_data.size();
     vector<double> G = {1.0, 1.0};
@@ -128,15 +128,15 @@ double integrated_loudness(Stereo_Wav &wav, double fs) {
     vector<double> right(wav.right_data.begin(), wav.right_data.end());
     
     /*========================calculate z========================*/
-    double T_g = 0.4;
+    double T_g = block_size;
     double overlap = 0.75, step = 1 - overlap;
     double T = len / fs;
     vector<unsigned> j_range = linspace(unsigned(0), unsigned(round((T-T_g)/(T_g*step))), round((T-T_g)/(T_g*step))+1);
     
     vector<double> z_left(j_range.size(), 0.0);
     vector<double> z_right(j_range.size(), 0.0);
-    calculate_z(left, fs, len, j_range, z_left);
-    calculate_z(right, fs, len, j_range, z_right);
+    calculate_z(left, fs, len, j_range, z_left, block_size);
+    calculate_z(right, fs, len, j_range, z_right, block_size);
     
     // left.clear(); right.clear(); // release unused vector
     
@@ -163,20 +163,20 @@ double integrated_loudness(Stereo_Wav &wav, double fs) {
 }
 
 /*===================intergrated_loudness func. Mono overload====================*/
-double integrated_loudness(Mono_Wav &wav, double fs) {
+double integrated_loudness(Mono_Wav &wav, double fs, double block_size = 0.4) {
     /*========================data normalize & copy========================*/
     size_t len = wav.data.size();
     double G = 1.0;
     vector<double> data(wav.data.begin(), wav.data.end());
     
     /*========================calculate z========================*/
-    double T_g = 0.4;
+    double T_g = block_size;
     double overlap = 0.75, step = 1 - overlap;
     double T = len / fs;
     vector<unsigned> j_range = linspace(unsigned(0), unsigned(round((T-T_g)/(T_g*step))), round((T-T_g)/(T_g*step))+1);
     
     vector<double> z(j_range.size(), 0.0);
-    calculate_z(data, fs, len, j_range, z);
+    calculate_z(data, fs, len, j_range, z, block_size);
     
     /*========================loudness========================*/
     vector<double> l(j_range.size(), 0.0);
