@@ -7,23 +7,22 @@
 
 #ifndef LKFS_h
 #define LKFS_h
-#include <iostream>
 #include <cmath>
-#include <vector>
 #include <ctime>
+#include <iostream>
+#include <numbers>
+#include <vector>
 #include "vector_operation.h"
 #include "Wav.h"
-#define pi 3.14159265358979323846
-using namespace std;
 
-void filter(const vector<double> &b, const vector<double> &a, const vector<double> &x, vector<double> &y) {
+void filter(const std::vector<double> &b, const std::vector<double> &a, const std::vector<double> &x, std::vector<double> &y) {
     
     /*==================================================================*/
     /*=== a[0]y[n]=\sig_{i=0}^{M}b_ix[n-i] - \sig_{j=1}^{N}a_jy[n-j] ===*/
     /*==================================================================*/
     
     if (y.empty()) {
-        cout << "Initialize the output vector, please." << endl;
+        std::cout << "Initialize the output vector, please." << std::endl;
         for(size_t i=0;i<x.size();i++) y.push_back(0.0);
     }
     
@@ -46,12 +45,12 @@ void filter(const vector<double> &b, const vector<double> &a, const vector<doubl
 }
 
 /*==========Every vector has to initial except here uses push_back()===========*/
-double throw_and_mean(double threshold, vector<double> &l, vector<double> &z) {
-    vector<unsigned> indicies_gated;
+double throw_and_mean(double threshold, std::vector<double> &l, std::vector<double> &z) {
+    std::vector<unsigned> indicies_gated;
     for(unsigned j=0;j<l.size();j++) {
         if(l[j]>threshold) indicies_gated.push_back(j);
     }
-    vector<double> z_kept;
+    std::vector<double> z_kept;
     for(int j=0;j<indicies_gated.size();j++) {
         z_kept.push_back(z[indicies_gated[j]]);
     }
@@ -59,14 +58,14 @@ double throw_and_mean(double threshold, vector<double> &l, vector<double> &z) {
     return z_avg;
 }
 
-void k_filter(const vector<double> &x, const double fs, vector<double> &y) {
-    vector<double> v(x.size(), 0.0);
+void k_filter(const std::vector<double> &x, const double fs, std::vector<double> &y) {
+    std::vector<double> v(x.size(), 0.0);
     /*========================pre_filter 1========================*/
     double f0 = 1681.9744509555319;
     double G  = 3.99984385397;
     double Q  = 0.7071752369554193;
     /*-----------------precompute----------------*/
-    double K  = tan(pi * f0 / fs);
+    double K  = tan(std::numbers::pi * f0 / fs);
     double Vh = pow(10, G/20);
     double Vb = pow(Vh, 0.499666774155);
     double a0_ = 1.0 + K / Q + K * K;
@@ -77,14 +76,14 @@ void k_filter(const vector<double> &x, const double fs, vector<double> &y) {
     double a1 = 2.0 * (K * K - 1.0) / a0_;
     double a2 = (1.0 - K / Q + K * K) / a0_;
     /*-----------------filter-----------------*/
-    vector<double> b{b0, b1,b2}, a{a0, a1, a2};
+    std::vector<double> b{b0, b1,b2}, a{a0, a1, a2};
     filter(b, a, x, v);
     
     /*========================pre_filter 2========================*/
     f0 = 38.13547087613982;
     Q  = 0.5003270373253953;
     /*-----------------precompute----------------*/
-    K  = tan(pi * f0 / fs);
+    K  = tan(std::numbers::pi * f0 / fs);
     a0 = 1.0;
     a1 = 2.0 * (K * K - 1.0) / (1.0 + K / Q + K * K);
     a2 = (1.0 - K / Q + K * K) / (1.0 + K / Q + K * K);
@@ -98,11 +97,11 @@ void k_filter(const vector<double> &x, const double fs, vector<double> &y) {
 }
 
 
-void calculate_z(vector<double> &signal, double fs, size_t len, const vector<unsigned> &j_range, vector<double> &z, double block_size = 0.4) {
+void calculate_z(std::vector<double> &signal, double fs, size_t len, const std::vector<unsigned> &j_range, std::vector<double> &z, double block_size = 0.4) {
     /*========================k_filter========================*/
-    vector<double> signal_filtered(len, 0.0);
+    std::vector<double> signal_filtered(len, 0.0);
     k_filter(signal, fs, signal_filtered);
-    vector<double> signal_powered(signal_filtered.begin(), signal_filtered.end());
+    std::vector<double> signal_powered(signal_filtered.begin(), signal_filtered.end());
     vector_ele_pow(signal_powered, 2.0);
     // WRITE signal_filtered wav
     
@@ -123,25 +122,25 @@ void calculate_z(vector<double> &signal, double fs, size_t len, const vector<uns
 double integrated_loudness(Stereo_Wav &wav, double fs, double block_size = 0.4) {
     /*========================data normalize & copy========================*/
     size_t len = wav.left_data.size();
-    vector<double> G = {1.0, 1.0};
-    vector<double> left(wav.left_data.begin(), wav.left_data.end());
-    vector<double> right(wav.right_data.begin(), wav.right_data.end());
+    std::vector<double> G = {1.0, 1.0};
+    std::vector<double> left(wav.left_data.begin(), wav.left_data.end());
+    std::vector<double> right(wav.right_data.begin(), wav.right_data.end());
     
     /*========================calculate z========================*/
     double T_g = block_size;
     double overlap = 0.75, step = 1 - overlap;
     double T = len / fs;
-    vector<unsigned> j_range = linspace(unsigned(0), unsigned(round((T-T_g)/(T_g*step))), round((T-T_g)/(T_g*step))+1);
+    std::vector<unsigned> j_range = linspace(unsigned(0), unsigned(round((T-T_g)/(T_g*step))), round((T-T_g)/(T_g*step))+1);
     
-    vector<double> z_left(j_range.size(), 0.0);
-    vector<double> z_right(j_range.size(), 0.0);
+    std::vector<double> z_left(j_range.size(), 0.0);
+    std::vector<double> z_right(j_range.size(), 0.0);
     calculate_z(left, fs, len, j_range, z_left, block_size);
     calculate_z(right, fs, len, j_range, z_right, block_size);
     
     // left.clear(); right.clear(); // release unused vector
     
     /*========================loudness========================*/
-    vector<double> l(j_range.size(), 0.0);
+    std::vector<double> l(j_range.size(), 0.0);
     for(int j=0;j<j_range.size();j++) {
         l[j] = -0.691 + 10.0*log10(G[0]*z_left[j]+G[1]*z_right[j]);
     }
@@ -167,19 +166,19 @@ double integrated_loudness(Mono_Wav &wav, double fs, double block_size = 0.4) {
     /*========================data normalize & copy========================*/
     size_t len = wav.data.size();
     double G = 1.0;
-    vector<double> data(wav.data.begin(), wav.data.end());
+    std::vector<double> data(wav.data.begin(), wav.data.end());
     
     /*========================calculate z========================*/
     double T_g = block_size;
     double overlap = 0.75, step = 1 - overlap;
     double T = len / fs;
-    vector<unsigned> j_range = linspace(unsigned(0), unsigned(round((T-T_g)/(T_g*step))), round((T-T_g)/(T_g*step))+1);
+    std::vector<unsigned> j_range = linspace(unsigned(0), unsigned(round((T-T_g)/(T_g*step))), round((T-T_g)/(T_g*step))+1);
     
-    vector<double> z(j_range.size(), 0.0);
+    std::vector<double> z(j_range.size(), 0.0);
     calculate_z(data, fs, len, j_range, z, block_size);
     
     /*========================loudness========================*/
-    vector<double> l(j_range.size(), 0.0);
+    std::vector<double> l(j_range.size(), 0.0);
     for(int j=0;j<j_range.size();j++) {
         l[j] = -0.691 + 10.0*log10(G*z[j]);
     }

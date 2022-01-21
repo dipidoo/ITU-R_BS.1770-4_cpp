@@ -11,7 +11,6 @@
 #include <fstream>
 #include <vector>
 #include "vector_operation.h"
-using namespace std;
 
 typedef struct WaveHeader {
 protected:
@@ -76,8 +75,8 @@ public:
 typedef struct Stereo_Wav {
     /*===================Format===================*/
     WaveHeader header;
-    vector<double> left_data;
-    vector<double> right_data;
+    std::vector<double> left_data;
+    std::vector<double> right_data;
 
     /*===================Constructor===================*/
     // Empty Constructor
@@ -90,15 +89,15 @@ typedef struct Stereo_Wav {
         }
     }
     // Explicit Constructor
-    Stereo_Wav(unsigned const SR, unsigned short const BPS, unsigned NoS, vector<double> ld, vector<double> rd):header(2, SR, BPS, NoS), left_data(ld), right_data(rd) {
+    Stereo_Wav(unsigned const SR, unsigned short const BPS, unsigned NoS, std::vector<double> ld, std::vector<double> rd):header(2, SR, BPS, NoS), left_data(ld), right_data(rd) {
         if(left_data.size()!=right_data.size()) {
-            cout << "Warning: audio left_data and audio right_data are not the same size." << endl;
+            std::cout << "Warning: audio left_data and audio right_data are not the same size." << std::endl;
         }
         if(NoS!=left_data.size()) {
-            cout << "Warning: Number of samples and audio left_data size are not the same." << endl;
+            std::cout << "Warning: Number of samples and audio left_data size are not the same." << std::endl;
         }
         if(NoS!=right_data.size()) {
-            cout << "Warning: Number of samples and audio right_data size are not the same." << endl;
+            std::cout << "Warning: Number of samples and audio right_data size are not the same." << std::endl;
         }
     }
     
@@ -114,14 +113,14 @@ typedef struct Stereo_Wav {
     
     /*===================File Operation===================*/
     /*===================Read===================*/
-    bool readfile(string filename) {
-        ifstream infile;
+    bool readfile(std::string filename) {
+        std::ifstream infile;
         WaveHeader hd;
-        vector<short> data_s;
+        std::vector<short> data_s;
         
-        infile.open(filename, ofstream::binary|ios::in);
+        infile.open(filename, std::ofstream::binary|std::ios::in);
         if (!infile.is_open()) {
-            cerr << "Could not open the file." << endl;
+            std::cerr << "Could not open the file." << std::endl;
             return false;
         }
         
@@ -135,7 +134,7 @@ typedef struct Stereo_Wav {
             data_s.push_back(temp);
         }
         infile.close();
-        vector<double> data_d(data_s.begin(), data_s.end());
+        std::vector<double> data_d(data_s.begin(), data_s.end());
         scalar(data_d, 1.0/32767.0);   // normalize to [-1,1] by 0xFFFF
         
         /*------------------------------------*/
@@ -148,33 +147,33 @@ typedef struct Stereo_Wav {
     }
     
     /*===================Write===================*/
-    bool writefile(string filename) {
-        ofstream outfile;
-        outfile.open(filename, ofstream::binary|ofstream::out);
+    bool writefile(std::string filename) {
+        std::ofstream outfile;
+        outfile.open(filename, std::ofstream::binary| std::ofstream::out);
         if (!outfile.is_open()) {
-            cerr << "Could not open the file." << endl;
+            std::cerr << "Could not open the file." << std::endl;
             return false;
         }
         
         outfile.write((char*)&header, sizeof(header));
         
-        double peak = max(abs_max_element(left_data), abs_max_element(right_data));
+        double peak = std::max(abs_max_element(left_data), abs_max_element(right_data));
         if(peak>=1.0) {
-            cout << "Possible clipped samples in output" << endl;
-            cout << "(peak : " << peak << ")" << endl;
+            std::cout << "Possible clipped samples in output" << std::endl;
+            std::cout << "(peak : " << peak << ")" << std::endl;
         }
         
         scalar(left_data, 32767.0);   // normalize back to [0~FFFF]
         scalar(right_data, 32767.0);  // normalize back to [0~FFFF]
-        vector<short> left_s(left_data.begin(), left_data.end());
-        vector<short> right_s(right_data.begin(), right_data.end());
+        std::vector<short> left_s(left_data.begin(), left_data.end());
+        std::vector<short> right_s(right_data.begin(), right_data.end());
         
         for(size_t i=0;i<left_s.size();i++) {
             outfile.write((char*)&left_s[i], sizeof(left_s[i]));
             outfile.write((char*)&right_s[i], sizeof(right_s[i]));
         }
         outfile.close();
-        cout << filename << " is wirtten successfully." << endl;
+        std::cout << filename << " is wirtten successfully." << std::endl;
         
         return false;
     }
@@ -183,7 +182,7 @@ typedef struct Stereo_Wav {
 typedef struct Mono_Wav {
     /*===================Format===================*/
     WaveHeader header;
-    vector<double> data;
+    std::vector<double> data;
     
     /*===================Constructor===================*/
     // Empty Constructor
@@ -195,9 +194,9 @@ typedef struct Mono_Wav {
         }
     }
     // Explicit Constructor
-    Mono_Wav(unsigned const SR, unsigned short const BPS, unsigned NoS, vector<double> d):header(1, SR, BPS, NoS), data(d) {
+    Mono_Wav(unsigned const SR, unsigned short const BPS, unsigned NoS, std::vector<double> d):header(1, SR, BPS, NoS), data(d) {
         if(NoS!=data.size()) {
-            cout << "Warning: Number of samples and audio data size are not the same." << endl;
+            std::cout << "Warning: Number of samples and audio data size are not the same." << std::endl;
         }
     }
     
@@ -209,14 +208,14 @@ typedef struct Mono_Wav {
     
     /*===================File Operation===================*/
     /*===================Read===================*/
-    bool readfile(string filename) {
-        ifstream infile;
+    bool readfile(std::string filename) {
+        std::ifstream infile;
         WaveHeader hd;
-        vector<short> data_s;
+        std::vector<short> data_s;
         
-        infile.open(filename, ofstream::binary|ios::in);
+        infile.open(filename, std::ofstream::binary|std::ios::in);
         if (!infile.is_open()) {
-            cerr << "Could not open the file." << endl;
+            std::cerr << "Could not open the file." << std::endl;
             return false;
         }
         
@@ -230,18 +229,18 @@ typedef struct Mono_Wav {
             data_s.push_back(temp);
         }
         infile.close();
-        vector<double> data_d(data_s.begin(), data_s.end());
+        std::vector<double> data_d(data_s.begin(), data_s.end());
         scalar(data_d, 1.0/32767.0);   // normalize to [-1,1] by 0xFFFF
         data = data_d;
         
         return true;
     }
     /*===================Write===================*/
-    bool writefile(string filename) {
-        ofstream outfile;
-        outfile.open(filename, ofstream::binary|ofstream::out);
+    bool writefile(std::string filename) {
+        std::ofstream outfile;
+        outfile.open(filename, std::ofstream::binary|std::ofstream::out);
         if (!outfile.is_open()) {
-            cerr << "Could not open the file." << endl;
+            std::cerr << "Could not open the file." << std::endl;
             return false;
         }
         
@@ -249,30 +248,30 @@ typedef struct Mono_Wav {
         
         double peak = abs_max_element(data);
         if(peak>=1.0) {
-            cout << "Possible clipped samples in output." << endl;
-            cout << "(peak : " << peak << ")" << endl;
+            std::cout << "Possible clipped samples in output." << std::endl;
+            std::cout << "(peak : " << peak << ")" << std::endl;
         }
         scalar(data, 32767.0);   // normalize back to [0~FFFF]
-        vector<short> data_s(data.begin(), data.end());
+        std::vector<short> data_s(data.begin(), data.end());
         
         for(size_t i=0;i<data_s.size();i++) {
             outfile.write((char*)&data_s[i], sizeof(data_s[i]));
         }
         outfile.close();
-        cout << filename << " is wirtten successfully." << endl;
+        std::cout << filename << " is wirtten successfully." << std::endl;
         
         return false;
     }
     
 } Mono_Wav;
 
-unsigned short Check_Stereo_Mono(string filename) {
-    ifstream infile;
+unsigned short Check_Stereo_Mono(std::string filename) {
+    std::ifstream infile;
     WaveHeader hd;
     
-    infile.open(filename, ofstream::binary|ios::in);
+    infile.open(filename, std::ofstream::binary|std::ios::in);
     if (!infile.is_open()) {
-        cerr << "Could not open the file." << endl;
+        std::cerr << "Could not open the file." << std::endl;
         return false;
     }
     
